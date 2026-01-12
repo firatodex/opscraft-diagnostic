@@ -1,304 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpsCraft | Operational Dependence Diagnostic</title>
-    <style>
-        :root {
-            --bg: #050505;
-            --card-bg: #111111;
-            --text-main: #e5e5e5;
-            --text-muted: #888888;
-            --accent: #ffffff;
-            --error: #ff4444;
-            --border: #333333;
-            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            --font-mono: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            padding: 40px 20px;
-            background: var(--bg);
-            color: var(--text-main);
-            font-family: var(--font-main);
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 600px;
-            width: 100%;
-        }
-
-        header {
-            margin-bottom: 40px;
-            border-left: 2px solid var(--accent);
-            padding-left: 20px;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            margin: 0 0 10px 0;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin: 0;
-        }
-
-        .question-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            padding: 24px;
-            margin-bottom: 16px;
-            border-radius: 4px;
-            transition: border-color 0.2s;
-        }
-
-        .question-card.error {
-            border-color: var(--error);
-        }
-
-        .question-text {
-            margin: 0 0 16px 0;
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        .options {
-            display: flex;
-            gap: 24px;
-        }
-
-        label {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
-        }
-
-        label:hover {
-            color: var(--accent);
-        }
-
-        input[type="radio"] {
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border: 1px solid var(--text-muted);
-            border-radius: 50%;
-            margin-right: 8px;
-            display: grid;
-            place-content: center;
-        }
-
-        input[type="radio"]::before {
-            content: "";
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            transform: scale(0);
-            transition: 120ms transform ease-in-out;
-            background-color: var(--accent);
-        }
-
-        input[type="radio"]:checked {
-            border-color: var(--accent);
-        }
-
-        input[type="radio"]:checked::before {
-            transform: scale(1);
-        }
-
-        input[type="radio"]:checked + span {
-            color: var(--text-main);
-            font-weight: bold;
-        }
-
-        /* Phone Input Styling */
-        .input-group {
-            margin-bottom: 24px;
-        }
-        
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-main);
-            font-weight: 600;
-        }
-
-        .text-input {
-            width: 100%;
-            padding: 16px;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            font-family: var(--font-mono);
-            font-size: 1rem;
-            border-radius: 4px;
-        }
-        
-        .text-input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        button.primary-btn {
-            width: 100%;
-            padding: 16px;
-            margin-top: 10px;
-            background: var(--accent);
-            color: var(--bg);
-            border: none;
-            font-family: var(--font-mono);
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: opacity 0.3s;
-        }
-
-        button.primary-btn:hover {
-            opacity: 0.9;
-        }
-        
-        button.primary-btn:disabled {
-            background: var(--text-muted);
-            cursor: not-allowed;
-        }
-
-        #result-area {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
-            display: none; 
-            animation: fadeIn 0.5s ease;
-        }
-
-        .result-label {
-            font-family: var(--font-mono);
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .result-title {
-            font-size: 1.8rem;
-            margin: 0 0 16px 0;
-        }
-
-        .result-copy {
-            color: var(--text-muted);
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-
-        .whatsapp-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 14px 24px;
-            background: #25D366; 
-            color: #000;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 0.95rem;
-            border-radius: 4px;
-            width: 100%;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <header>
-        <h1>OpsCraft Diagnostic</h1>
-        <p class="subtitle">If you disappear for 14 days, does your business pause, or does it degrade? Honest answers only.</p>
-    </header>
-
-    <form id="diagnosticForm">
-        
-        <div class="question-card" id="card-q1">
-            <p class="question-text">1. Do routine decisions stop or slow down when you are unavailable?</p>
-            <div class="options">
-                <label><input type="radio" name="q1" value="1"><span>Yes</span></label>
-                <label><input type="radio" name="q1" value="0"><span>No</span></label>
-            </div>
-        </div>
-
-        <div class="question-card" id="card-q2">
-            <p class="question-text">2. Are approvals, exceptions, or escalations routed to you by default?</p>
-            <div class="options">
-                <label><input type="radio" name="q2" value="1"><span>Yes</span></label>
-                <label><input type="radio" name="q2" value="0"><span>No</span></label>
-            </div>
-        </div>
-
-        <div class="question-card" id="card-q3">
-            <p class="question-text">3. Can someone else see daily operations status without asking you?</p>
-            <div class="options">
-                <label><input type="radio" name="q3" value="0"><span>Yes</span></label>
-                <label><input type="radio" name="q3" value="1"><span>No</span></label>
-            </div>
-        </div>
-
-        <div class="question-card" id="card-q4">
-            <p class="question-text">4. If a key staff member is absent, do issues come directly to you?</p>
-            <div class="options">
-                <label><input type="radio" name="q4" value="1"><span>Yes</span></label>
-                <label><input type="radio" name="q4" value="0"><span>No</span></label>
-            </div>
-        </div>
-
-        <div class="question-card" id="card-q5">
-            <p class="question-text">5. Are problems discovered by you instead of flagged by a system?</p>
-            <div class="options">
-                <label><input type="radio" name="q5" value="1"><span>Yes</span></label>
-                <label><input type="radio" name="q5" value="0"><span>No</span></label>
-            </div>
-        </div>
-
-        <div class="input-group">
-            <label for="waNumber">WhatsApp Number (For Results)</label>
-            <input type="tel" id="waNumber" class="text-input" placeholder="e.g. 9876543210" required>
-        </div>
-
-        <button type="button" id="submitBtn" class="primary-btn">Analyze Operations</button>
-    </form>
-
-    <div id="result-area">
-        <span class="result-label">Diagnostic Result</span>
-        <h2 class="result-title" id="r-title"></h2>
-        <p class="result-copy" id="r-copy"></p>
-        <a id="whatsapp-link" class="whatsapp-btn" href="#" target="_blank">
-            Discuss Analysis via WhatsApp
-        </a>
-    </div>
-</div>
-
 <script>
-    // Your specific Google Script Web App URL
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIFfmoDuGrpc6L7TY_yY7jyQG8JTpRW_YeH6OiKTtG8TllhNZusshafJoq21KMOAcp/exec';
+    // PASTE YOUR NEW WEB APP URL HERE
+    const GOOGLE_SCRIPT_URL = 'YOUR_NEW_WEB_APP_URL_HERE';
 
     document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('submitBtn');
@@ -307,7 +9,6 @@
         const phoneInput = document.getElementById('waNumber');
         
         btn.addEventListener('click', () => {
-            // Reset errors
             document.querySelectorAll('.question-card').forEach(c => c.classList.remove('error'));
             phoneInput.style.borderColor = "#333";
             
@@ -316,59 +17,59 @@
             let firstError = null;
             let answers = {};
 
-            // 1. Validation: Questions
+            // 1. Validation & Capture
             for (let i = 1; i <= 5; i++) {
-                const name = `q${i}`;
-                const selected = form.querySelector(`input[name="${name}"]:checked`);
+                constname = `q${i}`;
+                const selected = form.querySelector(`input[name="q${i}"]:checked`);
+                const card = document.getElementById(`card-q${i}`);
                 
                 if (selected) {
                     let val = parseInt(selected.value);
                     score += val;
-                    answers[name] = val === 1 ? "Bad" : "Good"; // Store simple text for sheet
+                    
+                    // FIX: Capture the actual text "Yes" or "No"
+                    // This finds the <span> next to the radio button
+                    let answerText = selected.nextElementSibling.innerText;
+                    answers[`q${i}`] = answerText; 
+                    
                     answeredCount++;
                 } else {
-                    const card = document.getElementById(`card-${name}`);
                     card.classList.add('error');
                     if (!firstError) firstError = card;
                 }
             }
 
-            // 2. Validation: Phone Number
-            const phoneVal = phoneInput.value.trim();
-            if (phoneVal.length < 10) {
-                phoneInput.style.borderColor = "#ff4444";
+            if (phoneInput.value.length < 10) {
                 if (!firstError) firstError = phoneInput;
-                alert("Please enter a valid WhatsApp number to see your result.");
-                return;
+                return alert("Valid phone number required.");
             }
 
-            // Stop if questions missed
             if (answeredCount < 5) {
                 if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return; 
             }
 
-            // 3. Logic Interpretation
+            // Logic Interpretation
             let label = "";
             let copy = "";
-
             if (score <= 1) { 
                 label = "System-Led Operations";
-                copy = "Your operations are robust. The business functions as a machine, not a backpack you carry.";
+                copy = "Your operations are robust. The business functions as a machine.";
             } else if (score <= 3) {
                 label = "Owner-Dependent";
-                copy = "Decisions bottleneck at you. Your current structure is compensating for a lack of system through your personal effort.";
+                copy = "Decisions bottleneck at you. Structure compensates for lack of system.";
             } else {
                 label = "Single Point of Failure";
-                copy = "Critically fragile. Your presence is masking high operational risk. If you stop, the business stops.";
+                copy = "Critically fragile. If you stop, the business stops.";
             }
 
-            // 4. Send to Google Sheets
+            // Send to Google Sheets
             btn.textContent = "Processing...";
             btn.disabled = true;
 
             const payload = {
-                phone: phoneVal,
+                type: 'diagnostic', // Identifies this as Customer Data
+                phone: phoneInput.value,
                 q1: answers.q1,
                 q2: answers.q2,
                 q3: answers.q3,
@@ -381,14 +82,12 @@
             fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             }).then(() => {
-                // 5. Display Result after data is sent
+                // WA Link Logic
                 const waNumber = "8200537903"; 
-                const msg = `Hi Afzal,%0A%0AI completed the OpsCraft Diagnostic.%0A*Phone:* ${phoneVal}%0A*Score:* ${score}/5%0A*Result:* ${label}%0A%0AI want to discuss fixing my operational bottlenecks.`;
+                const msg = `Hi Afzal,%0A%0AI completed the OpsCraft Diagnostic.%0A*Phone:* ${phoneInput.value}%0A*Score:* ${score}/5%0A*Result:* ${label}`;
                 
                 document.getElementById('r-title').textContent = label;
                 document.getElementById('r-copy').textContent = copy;
@@ -396,16 +95,8 @@
                 
                 resultArea.style.display = "block";
                 resultArea.scrollIntoView({ behavior: 'smooth' });
-                
                 btn.textContent = "Analysis Complete";
-            }).catch(err => {
-                console.error('Error:', err);
-                btn.textContent = "Error Saving";
-                btn.disabled = false;
             });
         });
     });
 </script>
-
-</body>
-</html>
