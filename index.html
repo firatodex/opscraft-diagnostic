@@ -1,5 +1,74 @@
+<style>
+    /* Basic styling to ensure visibility - adjust as needed */
+    .question-card { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+    .question-card.error { border: 1px solid red; background-color: #fff0f0; }
+    .options label { display: block; margin: 5px 0; cursor: pointer; }
+    #result-area { display: none; margin-top: 20px; padding: 20px; background: #f9f9f9; border: 1px solid #ccc; }
+    .btn { padding: 10px 20px; background: #000; color: #fff; cursor: pointer; border: none; font-size: 16px; }
+    input[type="text"] { padding: 10px; width: 100%; max-width: 300px; margin-bottom: 10px; }
+</style>
+
+<div id="diagnostic-container">
+    <form id="diagnosticForm">
+        
+        <div class="question-card" id="card-q1">
+            <p><strong>1.</strong> If you don’t show up for 7 days, will sales, operations, or decisions slow down or stop?</p>
+            <div class="options">
+                <label><input type="radio" name="q1" value="1"> <span>Yes</span></label>
+                <label><input type="radio" name="q1" value="0"> <span>No</span></label>
+            </div>
+        </div>
+
+        <div class="question-card" id="card-q2">
+            <p><strong>2.</strong> Do employees come to you for approvals or decisions that could be rule-based or predefined?</p>
+            <div class="options">
+                <label><input type="radio" name="q2" value="1"> <span>Yes</span></label>
+                <label><input type="radio" name="q2" value="0"> <span>No</span></label>
+            </div>
+        </div>
+
+        <div class="question-card" id="card-q3">
+            <p><strong>3.</strong> Is there any daily/weekly business activity that only you know how to do properly?</p>
+            <div class="options">
+                <label><input type="radio" name="q3" value="1"> <span>Yes</span></label>
+                <label><input type="radio" name="q3" value="0"> <span>No</span></label>
+            </div>
+        </div>
+
+        <div class="question-card" id="card-q4">
+            <p><strong>4.</strong> If you stop answering calls/WhatsApp for one day, will something break or get delayed?</p>
+            <div class="options">
+                <label><input type="radio" name="q4" value="1"> <span>Yes</span></label>
+                <label><input type="radio" name="q4" value="0"> <span>No</span></label>
+            </div>
+        </div>
+
+        <div class="question-card" id="card-q5">
+            <p><strong>5.</strong> If you had to replace yourself for one month, would it be difficult or risky?</p>
+            <div class="options">
+                <label><input type="radio" name="q5" value="1"> <span>Yes</span></label>
+                <label><input type="radio" name="q5" value="0"> <span>No</span></label>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <label for="waNumber">WhatsApp Number:</label><br>
+            <input type="text" id="waNumber" placeholder="Enter your 10-digit number">
+        </div>
+
+        <button type="button" id="submitBtn" class="btn" style="margin-top: 20px;">Get My Score</button>
+
+    </form>
+
+    <div id="result-area">
+        <h2 id="r-title"></h2>
+        <p id="r-copy"></p>
+        <a id="whatsapp-link" href="#" target="_blank" class="btn" style="background: #25D366;">Chat on WhatsApp</a>
+    </div>
+</div>
+
 <script>
-    // PASTE YOUR NEW WEB APP URL HERE
+    // ▼▼▼ PASTE YOUR NEW WEB APP URL BELOW ▼▼▼
     const GOOGLE_SCRIPT_URL = 'YOUR_NEW_WEB_APP_URL_HERE';
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -9,17 +78,17 @@
         const phoneInput = document.getElementById('waNumber');
         
         btn.addEventListener('click', () => {
+            // Reset styles
             document.querySelectorAll('.question-card').forEach(c => c.classList.remove('error'));
-            phoneInput.style.borderColor = "#333";
+            phoneInput.style.borderColor = "#ccc";
             
             let score = 0;
             let answeredCount = 0;
             let firstError = null;
             let answers = {};
 
-            // 1. Validation & Capture
+            // 1. Validation & Capture Loop
             for (let i = 1; i <= 5; i++) {
-                constname = `q${i}`;
                 const selected = form.querySelector(`input[name="q${i}"]:checked`);
                 const card = document.getElementById(`card-q${i}`);
                 
@@ -27,10 +96,8 @@
                     let val = parseInt(selected.value);
                     score += val;
                     
-                    // FIX: Capture the actual text "Yes" or "No"
-                    // This finds the <span> next to the radio button
-                    let answerText = selected.nextElementSibling.innerText;
-                    answers[`q${i}`] = answerText; 
+                    // FIX: Force text "Yes" or "No" for the Sheet
+                    answers[`q${i}`] = (val === 1) ? "Yes" : "No";
                     
                     answeredCount++;
                 } else {
@@ -39,19 +106,23 @@
                 }
             }
 
+            // Phone Validation
             if (phoneInput.value.length < 10) {
+                phoneInput.style.borderColor = "red";
                 if (!firstError) firstError = phoneInput;
                 return alert("Valid phone number required.");
             }
 
+            // Check if all questions answered
             if (answeredCount < 5) {
                 if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return; 
             }
 
-            // Logic Interpretation
+            // 2. Logic Interpretation
             let label = "";
             let copy = "";
+            
             if (score <= 1) { 
                 label = "System-Led Operations";
                 copy = "Your operations are robust. The business functions as a machine.";
@@ -63,14 +134,14 @@
                 copy = "Critically fragile. If you stop, the business stops.";
             }
 
-            // Send to Google Sheets
+            // 3. Send to Google Sheets
             btn.textContent = "Processing...";
             btn.disabled = true;
 
             const payload = {
-                type: 'diagnostic', // Identifies this as Customer Data
+                type: 'diagnostic',
                 phone: phoneInput.value,
-                q1: answers.q1,
+                q1: answers.q1, // Sends "Yes" or "No"
                 q2: answers.q2,
                 q3: answers.q3,
                 q4: answers.q4,
@@ -85,7 +156,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             }).then(() => {
-                // WA Link Logic
+                // WA Link Construction
                 const waNumber = "8200537903"; 
                 const msg = `Hi Afzal,%0A%0AI completed the OpsCraft Diagnostic.%0A*Phone:* ${phoneInput.value}%0A*Score:* ${score}/5%0A*Result:* ${label}`;
                 
