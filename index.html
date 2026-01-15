@@ -1,173 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpsCraft Diagnostic</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-    /* Basic styling to ensure visibility - adjust as needed */
-    .question-card { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
-    .question-card.error { border: 1px solid red; background-color: #fff0f0; }
-    .options label { display: block; margin: 5px 0; cursor: pointer; }
-    #result-area { display: none; margin-top: 20px; padding: 20px; background: #f9f9f9; border: 1px solid #ccc; }
-    .btn { padding: 10px 20px; background: #000; color: #fff; cursor: pointer; border: none; font-size: 16px; }
-    input[type="text"] { padding: 10px; width: 100%; max-width: 300px; margin-bottom: 10px; }
+    /* RESET & BASE */
+    * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+    body {
+        margin: 0; padding: 0;
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+        color: #202124;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    /* CONTAINER */
+    .container {
+        width: 100%;
+        max-width: 500px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        padding: 40px 30px;
+        margin: 10px;
+        position: relative;
+    }
+
+    /* --- FORM VIEW STYLES (Keep existing clean style) --- */
+    .form-header { text-align: center; margin-bottom: 30px; }
+    .form-brand { font-size: 20px; font-weight: 600; color: #5f6368; margin-bottom: 20px; }
+    .headline { font-size: 18px; font-weight: 700; color: #111; line-height: 1.4; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+    
+    .q-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #f0f0f0; }
+    .q-text { font-size: 14px; font-weight: 500; color: #3c4043; padding-right: 15px; width: 70%; line-height: 1.3; }
+    .q-item.error { background: #fff5f5; padding-left: 10px; padding-right: 10px; border-radius: 4px; }
+
+    /* Toggle Switches */
+    .toggle-group { display: flex; background: #f1f3f4; border-radius: 30px; padding: 2px; height: 32px; align-items: center; }
+    .toggle-group label { cursor: pointer; position: relative; padding: 0 14px; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 2; }
+    .toggle-group span { font-size: 12px; font-weight: 600; color: #5f6368; transition: all 0.2s; }
+    .toggle-group input { display: none; }
+    .toggle-group input:checked + span { background-color: #3c4043; color: #fff; border-radius: 16px; padding: 4px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    
+    /* Form Footer */
+    .footer-action { margin-top: 30px; }
+    .micro-copy { font-size: 11px; color: #888; margin-bottom: 8px; display: block; font-weight: 500; }
+    .input-row { display: flex; gap: 10px; }
+    #waNumber { flex: 1; padding: 10px 12px; border: 1px solid #dadce0; border-radius: 6px; font-size: 15px; font-family: 'Inter', sans-serif; }
+    .btn-submit { background: #000; color: #fff; border: none; padding: 0 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; white-space: nowrap; }
+    .disclaimer { margin-top: 15px; padding-top: 15px; border-top: 1px solid #f0f0f0; text-align: center; font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
+
+
+    /* --- RESULT VIEW HIERARCHY (NEW) --- */
+    #result-view { display: none; }
+
+    /* Layer 1: Authority (Top Left, Subtle) */
+    .authority-header {
+        text-align: left;
+        margin-bottom: 30px;
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 15px;
+    }
+    .auth-brand {
+        font-size: 12px;
+        font-weight: 700;
+        color: #5f6368;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+    .auth-sub {
+        font-size: 11px;
+        color: #9aa0a6;
+        font-weight: 500;
+    }
+
+    /* Layer 2: RESULT (Dominant) */
+    .result-section { text-align: center; margin-bottom: 25px; }
+    .result-label-eyebrow {
+        font-size: 11px;
+        font-weight: 800;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 8px;
+    }
+    .result-title {
+        font-size: 26px; /* Big */
+        font-weight: 800; /* Bold */
+        color: #000;
+        line-height: 1.2;
+        margin-bottom: 8px;
+    }
+    .risk-level-container {
+        font-size: 13px;
+        font-weight: 600;
+        color: #5f6368;
+        background: #f1f3f4;
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 4px;
+    }
+
+    /* Layer 3: Meaning (Sentence, No Box) */
+    .meaning-text {
+        text-align: center;
+        font-size: 15px;
+        font-weight: 500;
+        color: #3c4043;
+        line-height: 1.5;
+        margin-bottom: 25px;
+        padding: 0 10px;
+    }
+
+    /* Layer 4: Reality Check (Red Box) */
+    .reality-box {
+        background-color: #fce8e6; /* Light Red */
+        border: 1px solid #fce8e6;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: left;
+        margin-bottom: 20px;
+    }
+    .reality-title {
+        color: #c5221f; /* Dark Red */
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+    }
+    .reality-content {
+        color: #c5221f;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.6;
+        white-space: pre-line; /* Allows \n for breaks */
+    }
+
+    /* Layer 5: Urgency (Text Only) */
+    .urgency-line {
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: #d93025; /* Red */
+        margin-bottom: 20px;
+    }
+
+    /* Layer 6: Action (Button + Mute) */
+    .btn-whatsapp {
+        display: block;
+        width: 100%;
+        background: #25D366;
+        color: white;
+        text-decoration: none;
+        padding: 15px;
+        border-radius: 8px;
+        font-weight: 700;
+        text-align: center;
+        font-size: 16px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: transform 0.1s;
+    }
+    .btn-whatsapp:active { transform: scale(0.98); }
+
+    .action-mute {
+        margin-top: 12px;
+        font-size: 11px;
+        color: #9aa0a6;
+        text-align: center;
+        font-weight: 500;
+    }
+
 </style>
+</head>
+<body>
 
-<div id="diagnostic-container">
-    <form id="diagnosticForm">
+<div class="container">
+    
+    <div id="form-view">
+        <div class="form-header">
+            <div class="form-brand">OpsCraft Technologies</div>
+            <div class="headline">This 30-Second Scan Reveals Whether Your Business Can Survive Without You</div>
+        </div>
+
+        <form id="diagnosticForm">
+            <div class="question-list">
+                <div class="q-item" id="row-q1">
+                    <div class="q-text">1. If you vanish for 7 days, does revenue or work stop?</div>
+                    <div class="toggle-group">
+                        <label><input type="radio" name="q1" value="1"><span>Yes</span></label>
+                        <label><input type="radio" name="q1" value="0"><span>No</span></label>
+                    </div>
+                </div>
+                <div class="q-item" id="row-q2">
+                    <div class="q-text">2. Do staff need your approval for routine decisions?</div>
+                    <div class="toggle-group">
+                        <label><input type="radio" name="q2" value="1"><span>Yes</span></label>
+                        <label><input type="radio" name="q2" value="0"><span>No</span></label>
+                    </div>
+                </div>
+                <div class="q-item" id="row-q3">
+                    <div class="q-text">3. Is there any critical task that only you can do correctly?</div>
+                    <div class="toggle-group">
+                        <label><input type="radio" name="q3" value="1"><span>Yes</span></label>
+                        <label><input type="radio" name="q3" value="0"><span>No</span></label>
+                    </div>
+                </div>
+                <div class="q-item" id="row-q4">
+                    <div class="q-text">4. If you stop responding on WhatsApp for a day, does work break?</div>
+                    <div class="toggle-group">
+                        <label><input type="radio" name="q4" value="1"><span>Yes</span></label>
+                        <label><input type="radio" name="q4" value="0"><span>No</span></label>
+                    </div>
+                </div>
+                <div class="q-item" id="row-q5">
+                    <div class="q-text">5. Is replacing yourself for a month risky?</div>
+                    <div class="toggle-group">
+                        <label><input type="radio" name="q5" value="1"><span>Yes</span></label>
+                        <label><input type="radio" name="q5" value="0"><span>No</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-action">
+                <span class="micro-copy">Result will be sent to your WhatsApp.</span>
+                <div class="input-row">
+                    <input type="text" id="waNumber" placeholder="WhatsApp Number" maxlength="15">
+                    <button type="button" id="submitBtn" class="btn-submit">Reveal My Business Risk</button>
+                </div>
+                <div class="disclaimer">
+                    No advice. No sales pitch. Just diagnosis.
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="result-view">
         
-        <div class="question-card" id="card-q1">
-            <p><strong>1.</strong> If you don’t show up for 7 days, will sales, operations, or decisions slow down or stop?</p>
-            <div class="options">
-                <label><input type="radio" name="q1" value="1"> <span>Yes</span></label>
-                <label><input type="radio" name="q1" value="0"> <span>No</span></label>
-            </div>
+        <div class="authority-header">
+            <div class="auth-brand">OpsCraft Technologies</div>
+            <div class="auth-sub">Operational Diagnostics</div>
         </div>
 
-        <div class="question-card" id="card-q2">
-            <p><strong>2.</strong> Do employees come to you for approvals or decisions that could be rule-based or predefined?</p>
-            <div class="options">
-                <label><input type="radio" name="q2" value="1"> <span>Yes</span></label>
-                <label><input type="radio" name="q2" value="0"> <span>No</span></label>
-            </div>
+        <div class="result-section">
+            <div class="result-label-eyebrow">RESULT</div>
+            <div class="result-title" id="r-title"></div>
+            <div class="risk-level-container" id="r-risk"></div>
         </div>
 
-        <div class="question-card" id="card-q3">
-            <p><strong>3.</strong> Is there any daily/weekly business activity that only you know how to do properly?</p>
-            <div class="options">
-                <label><input type="radio" name="q3" value="1"> <span>Yes</span></label>
-                <label><input type="radio" name="q3" value="0"> <span>No</span></label>
-            </div>
+        <div class="meaning-text" id="r-means"></div>
+
+        <div class="reality-box">
+            <div class="reality-title">Reality Check</div>
+            <div class="reality-content" id="r-reality"></div>
         </div>
 
-        <div class="question-card" id="card-q4">
-            <p><strong>4.</strong> If you stop answering calls/WhatsApp for one day, will something break or get delayed?</p>
-            <div class="options">
-                <label><input type="radio" name="q4" value="1"> <span>Yes</span></label>
-                <label><input type="radio" name="q4" value="0"> <span>No</span></label>
-            </div>
+        <div class="urgency-line">
+            Every month without systems increases burnout and exit risk.
         </div>
 
-        <div class="question-card" id="card-q5">
-            <p><strong>5.</strong> If you had to replace yourself for one month, would it be difficult or risky?</p>
-            <div class="options">
-                <label><input type="radio" name="q5" value="1"> <span>Yes</span></label>
-                <label><input type="radio" name="q5" value="0"> <span>No</span></label>
-            </div>
+        <a id="whatsapp-link" href="#" target="_blank" class="btn-whatsapp">
+            👉 Fix Owner Dependence Now
+        </a>
+        <div class="action-mute">
+            No pitch. Just clarity on what to systemize first.
         </div>
 
-        <div style="margin-top: 30px;">
-            <label for="waNumber">WhatsApp Number:</label><br>
-            <input type="text" id="waNumber" placeholder="Enter your 10-digit number">
-        </div>
-
-        <button type="button" id="submitBtn" class="btn" style="margin-top: 20px;">Get My Score</button>
-
-    </form>
-
-    <div id="result-area">
-        <h2 id="r-title"></h2>
-        <p id="r-copy"></p>
-        <a id="whatsapp-link" href="#" target="_blank" class="btn" style="background: #25D366;">Chat on WhatsApp</a>
     </div>
 </div>
 
 <script>
-    // ▼▼▼ PASTE YOUR NEW WEB APP URL BELOW ▼▼▼
-    const GOOGLE_SCRIPT_URL = 'YOUR_NEW_WEB_APP_URL_HERE';
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIFfmoDuGrpc6L7TY_yY7jyQG8JTpRW_YeH6OiKTtG8TllhNZusshafJoq21KMOAcp/exec';
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const btn = document.getElementById('submitBtn');
-        const form = document.getElementById('diagnosticForm');
-        const resultArea = document.getElementById('result-area');
+    // UPDATED DATA with \n for Line Breaks in Reality Check
+    const resultsData = {
+        0: {
+            title: "System-Driven",
+            risk: "Risk Level: System Healthy",
+            means: "Your business runs essentially without you.",
+            reality: "Your operations are robust.\nLock this structure in before it decays.",
+            waOneLine: "0 YES — System-Driven: Business runs without you."
+        },
+        1: {
+            title: "The Backup System",
+            risk: "Risk Level: Hidden Risk",
+            means: "Business looks independent, but one critical function still relies on you.",
+            reality: "One illness or emergency = disruption.\nYou are growing revenue, not freedom.",
+            waOneLine: "1 YES — Fragile System: One owner-dependent point can break momentum."
+        },
+        2: {
+            title: "The Silent Bottleneck",
+            risk: "Risk Level: Operational Drag",
+            means: "Your presence is quietly holding the system together.",
+            reality: "Employees wait.\nDecisions slow down.\nMomentum leaks daily.",
+            waOneLine: "2 YES — Hidden Bottleneck: You are silently slowing the business every day."
+        },
+        3: {
+            title: "Business Collapses Without You",
+            risk: "Risk Level: High Risk",
+            means: "You are not running a business. You are personally powering operations.",
+            reality: "Revenue exists, stability does not.\nThis is fragile income.",
+            waOneLine: "3 YES — Owner-Dependent: Your absence will disrupt operations and decisions."
+        },
+        4: {
+            title: "You Own a Job",
+            risk: "Risk Level: Critical Dependence",
+            means: "Your business exists only when you do. Every day off is borrowed time.",
+            reality: "Burnout is guaranteed.\nGrowth increases pressure, not freedom.",
+            waOneLine: "4 YES — Job Disguised as Business: Growth increases pressure, not freedom."
+        },
+        5: {
+            title: "One Failure Away from Shutdown",
+            risk: "Risk Level: Emergency Condition",
+            means: "You are the system. Remove you and the business stops.",
+            reality: "A business that cannot run without the owner is a liability.\nDelay cost: Health, Family, Wealth.",
+            waOneLine: "5 YES — Critical Risk: Remove you and the business shuts down."
+        }
+    };
+
+    document.getElementById('submitBtn').addEventListener('click', function() {
+        const btn = this;
+        const formView = document.getElementById('form-view');
+        const resultView = document.getElementById('result-view');
         const phoneInput = document.getElementById('waNumber');
         
-        btn.addEventListener('click', () => {
-            // Reset styles
-            document.querySelectorAll('.question-card').forEach(c => c.classList.remove('error'));
-            phoneInput.style.borderColor = "#ccc";
+        // Reset Styles
+        document.querySelectorAll('.q-item').forEach(el => el.classList.remove('error'));
+        phoneInput.style.borderColor = "#dadce0";
+
+        let yesCount = 0;
+        let answeredCount = 0;
+        let answersPayload = {};
+        let firstError = null;
+
+        // Loop 5 Questions
+        for (let i = 1; i <= 5; i++) {
+            const row = document.getElementById(`row-q${i}`);
+            const selected = document.querySelector(`input[name="q${i}"]:checked`);
             
-            let score = 0;
-            let answeredCount = 0;
-            let firstError = null;
-            let answers = {};
-
-            // 1. Validation & Capture Loop
-            for (let i = 1; i <= 5; i++) {
-                const selected = form.querySelector(`input[name="q${i}"]:checked`);
-                const card = document.getElementById(`card-q${i}`);
-                
-                if (selected) {
-                    let val = parseInt(selected.value);
-                    score += val;
-                    
-                    // FIX: Force text "Yes" or "No" for the Sheet
-                    answers[`q${i}`] = (val === 1) ? "Yes" : "No";
-                    
-                    answeredCount++;
-                } else {
-                    card.classList.add('error');
-                    if (!firstError) firstError = card;
-                }
-            }
-
-            // Phone Validation
-            if (phoneInput.value.length < 10) {
-                phoneInput.style.borderColor = "red";
-                if (!firstError) firstError = phoneInput;
-                return alert("Valid phone number required.");
-            }
-
-            // Check if all questions answered
-            if (answeredCount < 5) {
-                if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return; 
-            }
-
-            // 2. Logic Interpretation
-            let label = "";
-            let copy = "";
-            
-            if (score <= 1) { 
-                label = "System-Led Operations";
-                copy = "Your operations are robust. The business functions as a machine.";
-            } else if (score <= 3) {
-                label = "Owner-Dependent";
-                copy = "Decisions bottleneck at you. Structure compensates for lack of system.";
+            if (selected) {
+                let val = parseInt(selected.value);
+                if (val === 1) yesCount++;
+                answersPayload[`q${i}`] = (val === 1) ? "Yes" : "No";
+                answeredCount++;
             } else {
-                label = "Single Point of Failure";
-                copy = "Critically fragile. If you stop, the business stops.";
+                row.classList.add('error');
+                if (!firstError) firstError = row;
             }
+        }
 
-            // 3. Send to Google Sheets
-            btn.textContent = "Processing...";
-            btn.disabled = true;
+        // Validate Phone
+        if (phoneInput.value.length < 10) {
+            phoneInput.style.borderColor = "#d93025";
+            if (!firstError) firstError = phoneInput;
+            return alert("Enter valid WhatsApp number");
+        }
 
-            const payload = {
-                type: 'diagnostic',
-                phone: phoneInput.value,
-                q1: answers.q1, // Sends "Yes" or "No"
-                q2: answers.q2,
-                q3: answers.q3,
-                q4: answers.q4,
-                q5: answers.q5,
-                score: score,
-                label: label
-            };
+        if (answeredCount < 5) return;
 
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            }).then(() => {
-                // WA Link Construction
-                const waNumber = "8200537903"; 
-                const msg = `Hi Afzal,%0A%0AI completed the OpsCraft Diagnostic.%0A*Phone:* ${phoneInput.value}%0A*Score:* ${score}/5%0A*Result:* ${label}`;
-                
-                document.getElementById('r-title').textContent = label;
-                document.getElementById('r-copy').textContent = copy;
-                document.getElementById('whatsapp-link').href = `https://wa.me/${waNumber}?text=${msg}`;
-                
-                resultArea.style.display = "block";
-                resultArea.scrollIntoView({ behavior: 'smooth' });
-                btn.textContent = "Analysis Complete";
-            });
+        // Process Data
+        const data = resultsData[yesCount];
+        
+        // Update Result View
+        document.getElementById('r-title').textContent = data.title;
+        document.getElementById('r-risk').textContent = data.risk;
+        document.getElementById('r-means').textContent = data.means;
+        document.getElementById('r-reality').textContent = data.reality; // \n handled by CSS white-space: pre-line
+
+        // WA Link
+        const targetPhone = "918200537903";
+        const msgText = `${data.waOneLine}\n\nMy Phone: ${phoneInput.value}`;
+        document.getElementById('whatsapp-link').href = `https://wa.me/${targetPhone}?text=${encodeURIComponent(msgText)}`;
+
+        // API Call
+        btn.textContent = "...";
+        btn.disabled = true;
+
+        const payload = {
+            phone: phoneInput.value,
+            score: yesCount,
+            label: data.title,
+            ...answersPayload
+        };
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            formView.style.display = 'none';
+            resultView.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }).catch(() => {
+            formView.style.display = 'none';
+            resultView.style.display = 'block';
         });
     });
 </script>
+
+</body>
+</html>
